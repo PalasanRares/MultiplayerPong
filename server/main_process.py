@@ -1,5 +1,7 @@
 import socket
 import json
+import struct
+import sys
 from threading import Thread
 
 
@@ -11,6 +13,11 @@ class ClientThread(Thread):
         self.port = port
         self.connection = connection
         print("New thread created for ip " + ip + " port " + str(port))
+
+    
+    def run(self):
+        (data,) = struct.unpack("!i", self.connection.recv(1024)) # struct.unpack returns a tuple containing one item
+        print("Received " + str(data) + " from client")
     
 
 def read_from_file(file_name):
