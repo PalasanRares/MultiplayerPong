@@ -35,7 +35,7 @@ def run():
     while True:
         tcp_socket.listen()
         (client_connection, (client_ip, client_port)) = tcp_socket.accept() # new client connected
-        (room_number,) = struct.unpack("!i", client_connection.recv(1024)) # receive the room number
+        (room_number,) = struct.unpack("!i", client_connection.recv(4)) # receive the room number
         new_client = Player(client_ip, client_port, client_connection)
 
         # checking if the room exists or a new room should be created
@@ -44,8 +44,14 @@ def run():
             room_numbers.append(new_room_number)
             room_thread = RoomThread(new_client, new_room_number)
             threads[new_room_number] = room_thread
+            client_connection.send(struct.pack("!i", 200)) # sending success to player that created the room
         else:
-            threads[room_number].add_second_player(new_client)
+            if room_number in room_numbers and threads[room_number].add_second_player(new_client):
+                client_connection.send(struct.pack("!i", 200)) # sending succes to player that joined the room
+                threads[room_number].start()
+            else:
+                print("Client " + client_ip + " tried to connect to a non existing or full room")
+                client_connection.send(struct.pack("!i", 400)) # sending error to player that tried joining the room
 
 
 if (__name__ == "__main__"):
