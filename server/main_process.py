@@ -2,27 +2,23 @@ import socket
 import json
 import struct
 import sys
+import random
 from threading import Thread
+from player import Player
+from room_thread import RoomThread
 
-
-class ClientThread(Thread):
-
-    def __init__(self, ip, port, connection):
-        Thread.__init__(self)
-        self.ip = ip
-        self.port = port
-        self.connection = connection
-        print("New thread created for ip " + ip + " port " + str(port))
-
-    
-    def run(self):
-        (data,) = struct.unpack("!i", self.connection.recv(1024)) # struct.unpack returns a tuple containing one item
-        print("Received " + str(data) + " from client")
-    
+NEW_ROOM = -1
 
 def read_from_file(file_name):
     ip_and_port = json.load(open(file_name))
     return ip_and_port["localIp"], ip_and_port["localPort"]
+
+
+def generate_room_number(room_numbers):
+    number = random.randrange(0, 10000)
+    while number in room_numbers:
+        number = random.randrange(0, 10000)
+    return number
 
 
 def run():
@@ -33,14 +29,23 @@ def run():
     tcp_socket.bind((local_ip, local_port))
     print("Server is up and waiting for connections!")
 
-    threads = []
+    room_numbers = []
+    threads = {}
 
     while True:
         tcp_socket.listen()
-        (client_connection, (client_ip, client_port)) = tcp_socket.accept()
-        new_client = ClientThread(client_ip, client_port, client_connection)
-        new_client.start()
-        threads.append(new_client)
+        (client_connection, (client_ip, client_port)) = tcp_socket.accept() # new client connected
+        (room_number,) = struct.unpack("!i", client_connection.recv(1024)) # receive the room number
+        new_client = Player(client_ip, client_port, client_connection)
+
+        # checking if the room exists or a new room should be created
+        if (room_number == NEW_ROOM):
+            new_room_number = generate_room_number(room_numbers)
+            room_numbers.append(new_room_number)
+            room_thread = RoomThread(new_client, new_room_number)
+            threads[new_room_number] = room_thread
+        else:
+            threads[room_number].add_second_player(new_client)
 
 
 if (__name__ == "__main__"):
