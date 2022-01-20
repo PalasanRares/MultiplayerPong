@@ -86,6 +86,21 @@ void renderMainMenu(SDL_Renderer* renderer, SDL_Texture** textures, string roomC
 
 }
 
+void renderWaitingLobby(SDL_Renderer* renderer, SDL_Texture** textures, TTF_Font* font) {
+    SDL_Rect middleLineDest = {484, 0, 32, 500};
+    SDL_Rect playerDest1 = {0, 186, 32, 128};
+    SDL_Rect playerDest2 = {968, 186, 32, 128};
+    SDL_Rect ballDest = {468, 218, 64, 64};
+
+    SDL_SetRenderDrawColor(renderer, 64, 64, 64, 255);
+    SDL_RenderClear(renderer);
+    SDL_RenderCopy(renderer, textures[MIDDLE_LINE], nullptr, &middleLineDest);
+    SDL_RenderCopy(renderer, textures[PONG_PLAYER], nullptr, &playerDest1);
+    SDL_RenderCopy(renderer, textures[PONG_PLAYER], nullptr, &playerDest2);
+    SDL_RenderCopy(renderer, textures[BALL], nullptr, &ballDest);
+    SDL_RenderPresent(renderer);
+}
+
 void loadTextures(SDL_Texture** &textures, SDL_Renderer* renderer) {
     textures[LOGO] = IMG_LoadTexture(renderer, "./assets/PongLogo.png");
     textures[MIDDLE_LINE] = IMG_LoadTexture(renderer, "./assets/MiddleLine.png");
@@ -109,8 +124,28 @@ bool checkStartButtonClick(int &xMouse, int &yMouse) {
 
 }
 
-void initConnection() {
-    
+void initLobby(SDL_Renderer* renderer, SDL_Texture** textures, TTF_Font* font, bool &running) {
+    bool lobby = true;
+
+    int time = SDL_GetTicks();
+    while (lobby) {
+        renderWaitingLobby(renderer, textures, font);
+
+        SDL_Event event;
+        if (SDL_PollEvent(&event)) {
+            switch (event.type) {
+                case SDL_QUIT:
+                    lobby = false;
+                    running = false;
+                    break;
+            }
+        }
+
+        if ((SDL_GetTicks() - time) < 10) {
+            SDL_Delay(10);
+            time = SDL_GetTicks();
+        }
+    }
 }
 
 int main() {
@@ -134,6 +169,8 @@ int main() {
     SDL_StartTextInput();
     int time = SDL_GetTicks();
     while (running) {
+        renderMainMenu(renderer, textures, roomCode, font);
+
         SDL_Event event;
         if (SDL_PollEvent(&event)) {
             switch (event.type) {
@@ -144,7 +181,7 @@ int main() {
                     int xMouse, yMouse;
                     SDL_GetMouseState(&xMouse, &yMouse);
                     if (checkStartButtonClick(xMouse, yMouse)) {
-                        initConnection();
+                        initLobby(renderer, textures, font, running);
                     }
                     break;
                 case SDL_TEXTINPUT:
@@ -159,8 +196,6 @@ int main() {
                     break;
             }
         }
-
-        renderMainMenu(renderer, textures, roomCode, font);
 
         if ((SDL_GetTicks() - time) < 10) {
             SDL_Delay(10);
