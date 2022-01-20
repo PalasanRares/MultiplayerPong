@@ -2,6 +2,10 @@
 #include "SDL2/SDL_image.h"
 
 #include <iostream>
+#include <string>
+
+using std::string;
+using std::cout;
 
 enum {LOGO = 0, MIDDLE_LINE = 1, PONG_PLAYER = 2, BALL = 3, START_BUTTON = 4, JOIN_BUTTON = 5};
 
@@ -103,6 +107,9 @@ int main() {
 
     bool running = true;
 
+    string roomCode;
+
+    SDL_StartTextInput();
     int time = SDL_GetTicks();
     while (running) {
         SDL_Event event;
@@ -118,6 +125,17 @@ int main() {
                         initConnection();
                     }
                     break;
+                case SDL_TEXTINPUT:
+                    if (event.text.text[0] >= '0' && event.text.text[0] <= '9' && roomCode.size() < 4) {
+                        roomCode += event.text.text;
+                    }
+                    cout << roomCode << "\n";
+                    break;
+                case SDL_KEYDOWN:
+                    if (event.key.keysym.scancode == SDL_SCANCODE_BACKSPACE) {
+                        roomCode.clear();
+                    }
+                    break;
             }
         }
 
@@ -129,6 +147,7 @@ int main() {
         }
 
     }
+    SDL_StopTextInput();
 
     destroyTextures(textures);
     SDL_DestroyWindow(window);
