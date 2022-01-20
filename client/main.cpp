@@ -3,7 +3,7 @@
 
 #include <iostream>
 
-enum {LOGO = 0, MIDDLE_LINE = 1, PONG_PLAYER = 2, BALL = 3, START_BUTTON = 4};
+enum {LOGO = 0, MIDDLE_LINE = 1, PONG_PLAYER = 2, BALL = 3, START_BUTTON = 4, JOIN_BUTTON = 5};
 
 typedef struct Player {
     int x;
@@ -47,6 +47,7 @@ void renderMainMenu(SDL_Renderer* renderer, SDL_Texture** textures) {
     SDL_Rect playerDest2; playerDest2.x = 968; playerDest2.y = 186; playerDest2.w = 32; playerDest2.h = 128;
     SDL_Rect ballDest; ballDest.x = 468; ballDest.y = 218; ballDest.w = 64; ballDest.h = 64;
     SDL_Rect startButtonDest; startButtonDest.x = 436; startButtonDest.y = 300; startButtonDest.w = 128; startButtonDest.h = 64;
+    SDL_Rect joinButtonDest; joinButtonDest.x = 436; joinButtonDest.y = 380; joinButtonDest.w = 128; joinButtonDest.h = 64;
 
     SDL_SetRenderDrawColor(renderer, 64, 64, 64, 255);
     SDL_RenderClear(renderer);
@@ -57,6 +58,7 @@ void renderMainMenu(SDL_Renderer* renderer, SDL_Texture** textures) {
     SDL_RenderCopy(renderer, textures[PONG_PLAYER], nullptr, &playerDest2);
     SDL_RenderCopy(renderer, textures[BALL], nullptr, &ballDest);
     SDL_RenderCopy(renderer, textures[START_BUTTON], nullptr, &startButtonDest);
+    SDL_RenderCopy(renderer, textures[JOIN_BUTTON], nullptr, &joinButtonDest);
     SDL_RenderPresent(renderer);
 
 }
@@ -67,6 +69,7 @@ void loadTextures(SDL_Texture** &textures, SDL_Renderer* renderer) {
     textures[PONG_PLAYER] = IMG_LoadTexture(renderer, "./assets/PongPlayer.png");
     textures[BALL] = IMG_LoadTexture(renderer, "./assets/Ball.png");
     textures[START_BUTTON] = IMG_LoadTexture(renderer, "./assets/StartButton.png");
+    textures[JOIN_BUTTON] = IMG_LoadTexture(renderer, "./assets/JoinButton.png");
 
 }
 
@@ -76,6 +79,15 @@ void destroyTextures(SDL_Texture** textures) {
     SDL_DestroyTexture(textures[PONG_PLAYER]);
     SDL_DestroyTexture(textures[BALL]);
 
+}
+
+bool checkStartButtonClick(int &xMouse, int &yMouse) {
+    return (xMouse >= 436 && xMouse <= 564) && (yMouse >= 300 && yMouse <= 364);
+
+}
+
+void initConnection() {
+    
 }
 
 int main() {
@@ -98,6 +110,13 @@ int main() {
             switch (event.type) {
                 case SDL_QUIT:
                     running = false;
+                    break;
+                case SDL_MOUSEBUTTONDOWN:
+                    int xMouse, yMouse;
+                    SDL_GetMouseState(&xMouse, &yMouse);
+                    if (checkStartButtonClick(xMouse, yMouse)) {
+                        initConnection();
+                    }
                     break;
             }
         }
