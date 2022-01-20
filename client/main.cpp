@@ -1,5 +1,6 @@
 #include "SDL2/SDL.h"
 #include "SDL2/SDL_image.h"
+#include "SDL2/SDL_ttf.h"
 
 #include <iostream>
 #include <string>
@@ -44,7 +45,20 @@ void initializeWindowRenderer(SDL_Window* &window, SDL_Renderer* &renderer) {
     renderer = SDL_CreateRenderer(window, -1, SDL_RENDERER_ACCELERATED);
 }
 
-void renderMainMenu(SDL_Renderer* renderer, SDL_Texture** textures) {
+SDL_Texture* createTextTexture(string text, TTF_Font* font, SDL_Renderer* renderer) {
+    SDL_Texture* texture = nullptr;
+    SDL_Surface* surface = nullptr;
+    SDL_Color color = {255, 255, 255};
+
+    surface = TTF_RenderText_Solid(font, text.c_str(), color);
+    texture = SDL_CreateTextureFromSurface(renderer, surface);
+
+    SDL_FreeSurface(surface);
+    return texture;
+
+}
+
+void renderMainMenu(SDL_Renderer* renderer, SDL_Texture** textures, string roomCode, TTF_Font* font) {
     SDL_Rect logoDest; logoDest.x = 372; logoDest.y = 25; logoDest.w = 256; logoDest.h = 64;
     SDL_Rect middleLineDest; middleLineDest.x = 484; middleLineDest.y = 0; middleLineDest.w = 32; middleLineDest.h = 500;
     SDL_Rect playerDest1; playerDest1.x = 0; playerDest1.y = 186; playerDest1.w = 32; playerDest1.h = 128;
@@ -52,6 +66,10 @@ void renderMainMenu(SDL_Renderer* renderer, SDL_Texture** textures) {
     SDL_Rect ballDest; ballDest.x = 468; ballDest.y = 218; ballDest.w = 64; ballDest.h = 64;
     SDL_Rect startButtonDest; startButtonDest.x = 436; startButtonDest.y = 300; startButtonDest.w = 128; startButtonDest.h = 64;
     SDL_Rect joinButtonDest; joinButtonDest.x = 436; joinButtonDest.y = 380; joinButtonDest.w = 128; joinButtonDest.h = 64;
+    SDL_Rect roomCodeDest; roomCodeDest.x = 25; roomCodeDest.y = 450;
+
+    SDL_Texture* roomCodeTexture = createTextTexture(roomCode, font, renderer);
+    SDL_QueryTexture(roomCodeTexture, nullptr, nullptr, &roomCodeDest.w, &roomCodeDest.h);
 
     SDL_SetRenderDrawColor(renderer, 64, 64, 64, 255);
     SDL_RenderClear(renderer);
@@ -63,6 +81,7 @@ void renderMainMenu(SDL_Renderer* renderer, SDL_Texture** textures) {
     SDL_RenderCopy(renderer, textures[BALL], nullptr, &ballDest);
     SDL_RenderCopy(renderer, textures[START_BUTTON], nullptr, &startButtonDest);
     SDL_RenderCopy(renderer, textures[JOIN_BUTTON], nullptr, &joinButtonDest);
+    SDL_RenderCopy(renderer, roomCodeTexture, nullptr, &roomCodeDest);
     SDL_RenderPresent(renderer);
 
 }
@@ -97,6 +116,9 @@ void initConnection() {
 int main() {
     SDL_Init(SDL_INIT_VIDEO);
     IMG_Init(IMG_INIT_PNG);
+    TTF_Init();
+
+    TTF_Font* font = TTF_OpenFont("./fonts/pixelated.ttf", 32);
 
     SDL_Window* window = nullptr;
     SDL_Renderer* renderer = nullptr;
@@ -129,7 +151,6 @@ int main() {
                     if (event.text.text[0] >= '0' && event.text.text[0] <= '9' && roomCode.size() < 4) {
                         roomCode += event.text.text;
                     }
-                    cout << roomCode << "\n";
                     break;
                 case SDL_KEYDOWN:
                     if (event.key.keysym.scancode == SDL_SCANCODE_BACKSPACE) {
@@ -139,7 +160,7 @@ int main() {
             }
         }
 
-        renderMainMenu(renderer, textures);
+        renderMainMenu(renderer, textures, roomCode, font);
 
         if ((SDL_GetTicks() - time) < 10) {
             SDL_Delay(10);
@@ -153,6 +174,8 @@ int main() {
     SDL_DestroyWindow(window);
     SDL_DestroyRenderer(renderer);
     SDL_Quit();
+    IMG_Quit();
+    TTF_Quit();
 
     return 0;
 
